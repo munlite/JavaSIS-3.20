@@ -7,6 +7,7 @@ import pro.sisit.model.Author;
 import pro.sisit.model.Book;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,11 +100,36 @@ public class CSVAdapter<T> implements IOAdapter<T> {
     }
     private T convertListToObject(int rowIndex, List<String> list){
         if (entityType.getName().equals("pro.sisit.model.Author")){
-            return (T) new Author(list.get(rowIndex*2-2), list.get(rowIndex*2-1));
+            try {
+                return (T) entityType.getDeclaredConstructor(String.class, String.class).newInstance(list.get(rowIndex*2-2), list.get(rowIndex*2-1));
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
         else if (entityType.getName().equals("pro.sisit.model.Book")){
-            return (T) new Book(list.get(rowIndex*4-4), list.get(rowIndex*4-3), list.get(rowIndex*4-2), list.get(rowIndex*4-1));
+            try {
+                return (T) entityType.getDeclaredConstructor(String.class, String.class,String.class, String.class).newInstance(
+                        list.get(rowIndex*4-4), list.get(rowIndex*4-3),
+                        list.get(rowIndex*4-2), list.get(rowIndex*4-1));
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+
+
         }else return null;
+        return null;
     }
 
 }

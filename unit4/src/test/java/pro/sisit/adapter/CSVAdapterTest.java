@@ -82,7 +82,7 @@ public class CSVAdapterTest {
 
         CSVAdapter<Author> authorCsvAdapter =
                 new CSVAdapter(Author.class, authorFilePath);
-        Author author = authorCsvAdapter.read(3);
+        Author author = authorCsvAdapter.read(4);
         assertEquals("Москва", author.getBirthPlace());
         assertEquals("Пушкин", author.getName());
     }
@@ -97,8 +97,6 @@ public class CSVAdapterTest {
 
         int authorIndex = authorCSVAdapter.append(newAuthor);
         Author authorAtIndex = authorCSVAdapter.read(authorIndex);
-        System.out.println(authorIndex);
-        System.out.println(authorAtIndex.getName());
         assertEquals(newAuthor, authorAtIndex);
 
 //        Path bookFilePath = Paths.get("test-book-file.csv");
