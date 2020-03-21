@@ -1,6 +1,7 @@
 package pro.sisit.javacourse.optimal;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
  * Транспорт для доставки груза
  */
 @Data
+
 public class Transport {
 
     /**
