@@ -1,27 +1,20 @@
 package pro.sisit.adapter.impl;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
+import pro.sisit.adapter.AdaptedForCSVobject;
 import pro.sisit.adapter.IOAdapter;
 import pro.sisit.model.Author;
 import pro.sisit.model.Book;
-
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.apache.commons.io.FileUtils.*;
-
-// 1. TODO: написать реализацию адаптера
-
-public class CSVAdapter<T> implements IOAdapter<T> {
+public class CSVAdapter<T extends AdaptedForCSVobject> implements IOAdapter<T> {
     private Class<T> entityType;
     private Path pathToFIle;
     private List<String> listOfLinesFromFile;
 
-    public CSVAdapter(Class<T> entityType, Path path) {
+    public  CSVAdapter(Class<T> entityType, Path path) {
 
         this.entityType = entityType;
         this.pathToFIle = path;
@@ -29,107 +22,99 @@ public class CSVAdapter<T> implements IOAdapter<T> {
 
     @Override
     public T read(int index) {
+        T objectClassAdapter = null;
+        ReadFileClass readFileClass = new ReadFileClass();
         listOfLinesFromFile = new ArrayList<>();
-        if (entityType.getName().equals("pro.sisit.model.Author")) {
-            try (LineIterator lineIteratorFile = FileUtils.lineIterator(pathToFIle.toFile())) { //создаем итератор для файла
-                while (lineIteratorFile.hasNext()){
-                    listOfLinesFromFile.add(lineIteratorFile.nextLine()); // записываем все строки в List
-                }
-                if (convertListToObject(index, listOfLinesFromFile) != null) // проверяем полученный объект
-                    return convertListToObject(index, listOfLinesFromFile); // метод, который создает нужный объект с параметрами из листа
-                else throw new NullPointerException();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            objectClassAdapter = entityType.getDeclaredConstructor().newInstance();
+            listOfLinesFromFile = readFileClass.readFile(pathToFIle);
+            objectClassAdapter = convertListToObject(objectClassAdapter, listOfLinesFromFile, index);
+            if (objectClassAdapter != null){
+                return objectClassAdapter;
 
-        }else if (entityType.getName().equals("pro.sisit.model.Book")){
-            try (LineIterator lineIteratorFile = lineIterator(pathToFIle.toFile());) {
-                while (lineIteratorFile.hasNext()){
-                    listOfLinesFromFile.add(lineIteratorFile.nextLine());
-                }
-                if (convertListToObject(index, listOfLinesFromFile) != null)
-                    return convertListToObject(index, listOfLinesFromFile);
-                else throw new NullPointerException();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+            } else { throw new RuntimeException("Пустой объект"); }
 
-        return null;
+        } catch (Exception e) { throw new RuntimeException("Ошибка поиска объекта по индесу"); }
     }
 
+    /**
+     * Метод поиска объекта в файле
+     * @param entity
+     * @return
+     */
     @Override
     public int append(T entity) {
-        int indexLineInFile =1; // индекс последней строки при нахождении объекта
-
+        //Класс для чтения файла и записи всех строк в лист
+        ReadFileClass readFileClass = new ReadFileClass();
         if (entity instanceof Author) {
-            boolean checkingSuccessfulSearch = false; //флаг, используемый для определения нахождения нужного поля
-            try (LineIterator lineIteratorFile = lineIterator(pathToFIle.toFile());) {
-                while (lineIteratorFile.hasNext()) {
-                    if (((Author) entity).getName().equals(lineIteratorFile.nextLine())) {
-                        checkingSuccessfulSearch = true;
-                        indexLineInFile++;
-                        break;
-                    } else indexLineInFile++;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return checkingSuccessfullSearchInFile(checkingSuccessfulSearch, indexLineInFile,2); //метод для перевода индекса последней строи в индек объекта
+            return searchAuthor(readFileClass.readFile(pathToFIle), ((Author) entity).getName());
         } else if (entity instanceof Book) {
-            boolean checkingSuccessfulSearch = false;
-            try (LineIterator lineIteratorFile = lineIterator(pathToFIle.toFile());) {
-                while (lineIteratorFile.hasNext()) {
-                    if (((Book) entity).getIsbn().equals(lineIteratorFile.nextLine())) {
-                        checkingSuccessfulSearch = true;
+            return searchBook(readFileClass.readFile(pathToFIle), ((Book) entity).getIsbn());
+        } else {throw new RuntimeException("Файла с таким типом объекта не существует"); }
 
-                        break;
-                    } else indexLineInFile++;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return checkingSuccessfullSearchInFile(checkingSuccessfulSearch, indexLineInFile,4);
+    }
+
+    /**
+     * Метод преобразования индекса из файла в индекс объекта
+     * @param indexLineInFile индекс из файла
+     * @param numberOfLines число строк выделенных для записи одного объекта
+     * @return индекс объекта
+     */
+    private int checkingSuccessfullSearchInFile(int indexLineInFile, int numberOfLines){
+        return indexLineInFile/numberOfLines;
+    }
+
+    /**
+     * Метод для конвертирования строк из файла в объект.
+     * @param t Объект
+     * @param list лист со строками из файла
+     * @param index индекс объекта в файле
+     * @return заполненый объект
+     */
+    private T convertListToObject(T t, List<String> list, int index) throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+
+        if (!list.isEmpty()){
+            if (t instanceof Book) {
+                 t.fillingInAnObjectField(list.subList(index*4-4, index*4));
+                 return t;
+            }else if (t instanceof Author){
+                t.fillingInAnObjectField(list.subList(index*2-2, index*2));
+                return t;
+
+            }else { throw new RuntimeException("Такого обьекта не существует"); }
+        }else { throw new RuntimeException("Лист строк пуст"); }
+    }
+
+    /**
+     * Метод поиска книги в файле
+     * @param lists лист строк из файла
+     * @param isbn уникальный индетефикатор
+     * @return индекс объекта в файле
+     */
+    private int searchBook(List<String> lists, String isbn) {
+
+        if (!lists.isEmpty()) {
+            if(lists.indexOf(isbn)!=-1)
+                return checkingSuccessfullSearchInFile(lists.indexOf(isbn)+1,4);
+            else { throw new RuntimeException("Файл с книгами не содержит этот объект"); }
+        } else {
+            throw new RuntimeException(("Лист строк пуст"));
         }
-        return indexLineInFile;
+
     }
-    private int checkingSuccessfullSearchInFile(boolean checkingSuccessfulSearch, int indexLineInFile, int numberOfLines){
-        if (checkingSuccessfulSearch)
-            return indexLineInFile/numberOfLines;
-        else return -1;
-    }
-    private T convertListToObject(int rowIndex, List<String> list){
-        if (entityType.getName().equals("pro.sisit.model.Author")){
-            try {
-                return (T) entityType.getDeclaredConstructor(String.class, String.class).newInstance(list.get(rowIndex*2-2), list.get(rowIndex*2-1));
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            }
+    /**
+     * Метод поиска автора в файле
+     * @param lists лист строк из файла
+     * @param authorsName фамилия автора
+     * @return индекс объекта в файле
+     */
+    private int searchAuthor(List<String> lists, String authorsName) {
+        if (!lists.isEmpty()) {
+            if(lists.indexOf(authorsName)!=-1)
+                return checkingSuccessfullSearchInFile(lists.indexOf(authorsName)+2,2);
+            else { throw new RuntimeException("Файл с авторами не содержит этот объект"); }
+        } else {
+            throw new RuntimeException(("Лист строк пуст"));
         }
-        else if (entityType.getName().equals("pro.sisit.model.Book")){
-            try {
-                return (T) entityType.getDeclaredConstructor(String.class, String.class,String.class, String.class).newInstance(
-                        list.get(rowIndex*4-4), list.get(rowIndex*4-3),
-                        list.get(rowIndex*4-2), list.get(rowIndex*4-1));
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-
-
-        }else return null;
-        return null;
     }
-
 }

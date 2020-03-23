@@ -35,27 +35,12 @@ public class CSVAdapterTest {
         }
         assertEquals("test-author-file.csv", Paths.get("test-author-file.csv"));
 
-        //authorCsvAdapter.append(author);
-        // TODO: создать и заполнить csv-файл для сущности Book
-//        Path bookFilePath = Paths.get("test-book-file.csv");
-//        Book newBook = new Book(
-//                "Чертоги разума. Убей в себе идиота!",
-//                "Андрей Курпатов",
-//                "Психология",
-//                "978-5-906902-91-7");
-//        try {
-//            FileUtils.writeStringToFile(bookFilePath.toFile(), String.format(System.lineSeparator()+"%s\n%s\n%s\n%s", newBook.getName(),
-//                    newBook.getAuthor(), newBook.getGenre(), newBook.getIsbn()), true);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        assertEquals("test-book-file.csv", Paths.get("test-book-file.csv"));
-//        // * По желанию можете придумать и свои сущности
+
     }
 
     @After
     public void deleteFile() {
-        // TODO: удалить файлы после тестирования
+
         Path authorFilePath = Paths.get("test-author-file.csv");
         FileUtils.deleteQuietly(authorFilePath.toFile());
         Path bookFilePath = Paths.get("test-book-file.csv");
@@ -66,11 +51,10 @@ public class CSVAdapterTest {
     public void testRead() throws IOException {
 
         Path bookFilePath = Paths.get("test-book-file.csv");
-
         CSVAdapter<Book> bookCsvAdapter =
                 new CSVAdapter(Book.class, bookFilePath);
 
-        Book book1 = bookCsvAdapter.read(3);
+        Book book1 = bookCsvAdapter.read(1);
         assertEquals("Глуховский", book1.getAuthor());
         assertEquals("Будущее", book1.getName());
         assertEquals("978-5-17-118366-0", book1.getIsbn());
@@ -82,7 +66,7 @@ public class CSVAdapterTest {
 
         CSVAdapter<Author> authorCsvAdapter =
                 new CSVAdapter(Author.class, authorFilePath);
-        Author author = authorCsvAdapter.read(4);
+        Author author = authorCsvAdapter.read(1);
         assertEquals("Москва", author.getBirthPlace());
         assertEquals("Пушкин", author.getName());
     }
@@ -91,7 +75,7 @@ public class CSVAdapterTest {
     public void testAppend() throws IOException {
 
         Path authorFilePath = Paths.get("test-author-file.csv");
-        Author newAuthor = new Author("Тютчев","Овстуг");
+        Author newAuthor = new Author("Пушкин","Москва");
         CSVAdapter<Author> authorCSVAdapter =
                 new CSVAdapter(Author.class, authorFilePath);
 
@@ -99,20 +83,18 @@ public class CSVAdapterTest {
         Author authorAtIndex = authorCSVAdapter.read(authorIndex);
         assertEquals(newAuthor, authorAtIndex);
 
-//        Path bookFilePath = Paths.get("test-book-file.csv");
-//        CSVAdapter<Book> bookCsvAdapter =
-//                new CSVAdapter(Book.class, bookFilePath);
-//
-//        Book newBook = new Book(
-//                "1",
-//                "2",
-//                "3",
-//                "4");
-//
-//        int bookIndex = bookCsvAdapter.append(newBook);
-//        Book bookAtIndex = bookCsvAdapter.read(bookIndex);
-//        assertEquals(newBook, bookAtIndex);
-//
-//        // TODO: написать тесты для проверки сущности автора
+        Path bookFilePath = Paths.get("test-book-file.csv");
+        CSVAdapter<Book> bookCsvAdapter =
+                new CSVAdapter(Book.class, bookFilePath);
+
+        Book newBook = new Book(
+                "1",
+                "2",
+                "3",
+                "4");
+
+        int bookIndex = bookCsvAdapter.append(newBook);
+        Book bookAtIndex = bookCsvAdapter.read(bookIndex);
+        assertEquals(newBook, bookAtIndex);
     }
 }

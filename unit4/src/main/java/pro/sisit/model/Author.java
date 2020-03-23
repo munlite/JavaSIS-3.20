@@ -1,11 +1,17 @@
 package pro.sisit.model;
 
+import pro.sisit.adapter.AdaptedForCSVobject;
+
+import java.util.List;
 import java.util.Objects;
 
-public class Author {
+public class Author implements AdaptedForCSVobject {
 
     private String name;
     private String birthPlace;
+
+    public Author() {
+    }
 
     public Author(String name, String birthPlace) {
         this.name = name;
@@ -36,5 +42,11 @@ public class Author {
     @Override
     public int hashCode() {
         return Objects.hash(getName(), getBirthPlace());
+    }
+
+    @Override
+    public void fillingInAnObjectField(List<String> list) {
+        name = list.get(0);
+        birthPlace = list.get(1);
     }
 }
