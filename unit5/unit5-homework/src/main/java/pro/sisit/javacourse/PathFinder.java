@@ -27,6 +27,12 @@ public class PathFinder {
 
     }
 
+    /**
+     * Метод поиска дешового маршрута
+     * @param transports лист с транспортом, который подходит по способу доставки
+     * @param routeList лист с маршрутами
+     * @return самый дешевый вариант перевозки
+     */
     private Transport findingCheapOption(List<Transport> transports, List<Route> routeList) {
         BigDecimal min = Collections.max(transports.stream().map(Transport::getPrice).collect(Collectors.toList()))
                 .multiply(Collections.max(routeList.stream().map(Route::getLength).collect(Collectors.toList())));
@@ -41,6 +47,12 @@ public class PathFinder {
         return minTransport;
     }
 
+    /**
+     * Метод филтрации транспорта по способу доставки
+     * @param deliveryTask Заказ
+     * @param transports весь транспор, доступный для доставки
+     * @return лист с транспортом
+     */
     private Optional<List<Transport>> filterByRouteTypeAndVolume(DeliveryTask deliveryTask, List<Transport> transports) {
 
         if (deliveryTask != null && transports != null) {
