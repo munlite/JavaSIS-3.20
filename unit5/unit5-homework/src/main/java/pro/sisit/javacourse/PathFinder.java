@@ -1,6 +1,6 @@
 package pro.sisit.javacourse;
 
-import org.w3c.dom.ls.LSOutput;
+
 import pro.sisit.javacourse.optimal.DeliveryTask;
 import pro.sisit.javacourse.optimal.Route;
 import pro.sisit.javacourse.optimal.RouteType;
@@ -9,7 +9,7 @@ import pro.sisit.javacourse.optimal.Transport;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class PathFinder {
 
@@ -19,33 +19,34 @@ public class PathFinder {
      * Если список transports равен null, то оптимальеый транспорт тоже равен null.
      */
     public Transport getOptimalTransport(DeliveryTask deliveryTask, List<Transport> transports) {
-        // ToDo: realize me!
-        if(filterByRouteTypeAndVolume(deliveryTask, transports).isPresent()) {
-            Transport transport = findingCheapOption(filterByRouteTypeAndVolume(deliveryTask, transports).get(), deliveryTask.getRoutes());
-            return transport;
-        } else return null;
+
+        Transport transport = Optional.ofNullable(findingCheapOption(filterByRouteTypeAndVolume(deliveryTask,
+                transports),
+                deliveryTask)).orElse(null);
+        return transport;
 
     }
 
     /**
      * Метод поиска дешового маршрута
      * @param transports лист с транспортом, который подходит по способу доставки
-     * @param routeList лист с маршрутами
+     * @param deliveryTask
      * @return самый дешевый вариант перевозки
      */
-    private Transport findingCheapOption(List<Transport> transports, List<Route> routeList) {
-        BigDecimal min = Collections.max(transports.stream().map(Transport::getPrice).collect(Collectors.toList()))
-                .multiply(Collections.max(routeList.stream().map(Route::getLength).collect(Collectors.toList())));
-        Transport minTransport = transports.get(0);
-        for (Transport t : transports)
-            for (Route r : routeList) {
-                if (t.getType() == r.getType() && min.compareTo(t.getPrice().multiply(r.getLength())) == 1) {
-                    min = t.getPrice().multiply(r.getLength());
-                    minTransport = t;
-                }
-            }
-        return minTransport;
+    public Transport findingCheapOption(List<Transport> transports, DeliveryTask deliveryTask) {
+        if (transports != null && deliveryTask != null) {
+            List<Route> routeList = deliveryTask.getRoutes();
+            Map<RouteType, BigDecimal> allValues = routeList.stream()
+                    .collect(Collectors.toMap(Route::getType, Route::getLength));
+            return transports.stream()
+                    .filter(transport -> allValues.containsKey(transport.getType()))
+                    .min(Comparator.comparing(transport ->
+                            transport.getPrice().multiply(allValues.get(transport.getType())))).get();
+        } else {
+            return null;
+        }
     }
+
 
     /**
      * Метод филтрации транспорта по способу доставки
@@ -53,23 +54,23 @@ public class PathFinder {
      * @param transports весь транспор, доступный для доставки
      * @return лист с транспортом
      */
-    private Optional<List<Transport>> filterByRouteTypeAndVolume(DeliveryTask deliveryTask, List<Transport> transports) {
+    public List<Transport> filterByRouteTypeAndVolume(DeliveryTask deliveryTask, List<Transport> transports) {
 
         if (deliveryTask != null && transports != null) {
             List<Route> listRoute = deliveryTask.getRoutes();
-            Optional<List<Transport>> transportOprionalList = Optional.of(transports);
-            return transportOprionalList = Optional.of(transports.stream()
+            return transports.stream()
+                    .filter(transport -> transport.getVolume().compareTo(deliveryTask.getVolume()) >= 0)
                     .filter(transport -> {
-                        for (Route r : listRoute) {
-                            if (transport.getType() == r.getType() && transport.getVolume().compareTo(deliveryTask.getVolume()) >= 0)
-                                return true;
-                        }
-                        return false;
-                    })
-                    .collect(Collectors.toList()));
-
-        } else {
-            return Optional.empty();
+                        listRoute.stream()
+                                .filter(route -> (route.getType() == transport.getType()))
+                                .collect(Collectors.toList());
+                    return true;})
+                    .collect(Collectors.toList());
         }
+            else {
+                return transports = null;
+        }
+
     }
+
 }
