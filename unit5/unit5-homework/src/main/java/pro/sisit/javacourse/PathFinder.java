@@ -20,9 +20,10 @@ public class PathFinder {
      */
     public Transport getOptimalTransport(DeliveryTask deliveryTask, List<Transport> transports) {
 
-        Transport transport = Optional.ofNullable(findingCheapOption(filterByRouteTypeAndVolume(deliveryTask,
-                transports),
-                deliveryTask)).orElse(null);
+        Transport transport = Optional
+                .ofNullable(findingCheapOption(filterByRouteTypeAndVolume(deliveryTask, transports),
+                        deliveryTask))
+                .orElse(null);
         return transport;
 
     }
@@ -33,15 +34,21 @@ public class PathFinder {
      * @param deliveryTask
      * @return самый дешевый вариант перевозки
      */
-    public Transport findingCheapOption(List<Transport> transports, DeliveryTask deliveryTask) {
-        if (transports != null && deliveryTask != null) {
-            List<Route> routeList = deliveryTask.getRoutes();
-            Map<RouteType, BigDecimal> allValues = routeList.stream()
+    public Transport findingCheapOption(List<Transport> transports,
+                                        DeliveryTask deliveryTask) {
+        if (deliveryTask != null) {
+            Map<RouteType, BigDecimal> allValues = deliveryTask.getRoutes()
+                    .stream()
                     .collect(Collectors.toMap(Route::getType, Route::getLength));
-            return transports.stream()
-                    .filter(transport -> allValues.containsKey(transport.getType()))
-                    .min(Comparator.comparing(transport ->
-                            transport.getPrice().multiply(allValues.get(transport.getType())))).get();
+            return Optional.ofNullable(transports)
+                    .map(data -> transports
+                            .stream()
+                            .filter(transport -> allValues.containsKey(transport.getType()))
+                            .min(Comparator.comparing(transport ->
+                                    transport.getPrice()
+                                            .multiply(allValues.get(transport.getType()))))
+                            .get())
+                    .orElse(null);
         } else {
             return null;
         }
@@ -57,18 +64,17 @@ public class PathFinder {
     public List<Transport> filterByRouteTypeAndVolume(DeliveryTask deliveryTask, List<Transport> transports) {
 
         if (deliveryTask != null && transports != null) {
-            List<Route> listRoute = deliveryTask.getRoutes();
+            Map<RouteType, BigDecimal> allValues = deliveryTask.getRoutes()
+                    .stream()
+                    .collect(Collectors.toMap(Route::getType, Route::getLength));
             return transports.stream()
-                    .filter(transport -> transport.getVolume().compareTo(deliveryTask.getVolume()) >= 0)
-                    .filter(transport -> {
-                        listRoute.stream()
-                                .filter(route -> (route.getType() == transport.getType()))
-                                .collect(Collectors.toList());
-                    return true;})
+                    .filter(transport -> transport.getVolume()
+                            .compareTo(deliveryTask.getVolume()) >= 0)
+                    .filter(transport -> allValues.containsKey(transport.getType()))
                     .collect(Collectors.toList());
         }
             else {
-                return transports = null;
+            return null;
         }
 
     }
