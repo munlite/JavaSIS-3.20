@@ -7,12 +7,12 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
+@Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class Author {
+public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -22,4 +22,13 @@ public class Author {
 
     @Column(name = "last_name")
     private String lastname;
+
+    @Column
+    private String street;
+
+    @Column
+    private String house;
+
+    @Column
+    private String apartment;
 }

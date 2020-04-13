@@ -13,20 +13,20 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Book {
+public class Deal {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column
-    private String title;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_book")
+    private Book book;
 
-    @Column
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_client")
+    private Client client;
 
-    @Column
-    private Integer year;
-
-    @Column
+    @Column(precision=19, scale=6)
     private BigDecimal price;
 }

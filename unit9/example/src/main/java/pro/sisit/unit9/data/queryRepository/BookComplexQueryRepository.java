@@ -1,4 +1,4 @@
-package pro.sisit.unit9.data;
+package pro.sisit.unit9.data.queryRepository;
 
 import pro.sisit.unit9.entity.Book;
 

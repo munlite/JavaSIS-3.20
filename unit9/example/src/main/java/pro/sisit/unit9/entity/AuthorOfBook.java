@@ -1,11 +1,18 @@
 package pro.sisit.unit9.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Entity
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "author_of_book")
 public class AuthorOfBook {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -19,3 +26,4 @@ public class AuthorOfBook {
     @JoinColumn(name = "author_id")
     private Author author;
 }
+
